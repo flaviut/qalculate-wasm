@@ -1,0 +1,22 @@
+We can't use popen or gnuplot in the emscripten environment, so always return
+false.
+
+--- a/libqalculate/Calculator-plot.cc
++++ b/libqalculate/Calculator-plot.cc
+@@ -54,15 +54,7 @@
+ }
+ 
+ bool Calculator::canPlot() {
+-#ifdef _WIN32
+-	LPSTR lpFilePart;
+-	char filename[MAX_PATH];
+-	return SearchPath(NULL, "gnuplot", ".exe", MAX_PATH, filename, &lpFilePart);
+-#else
+-	FILE *pipe = popen("gnuplot - 2>/dev/null", "w");
+-	if(!pipe) return false;
+-	return pclose(pipe) == 0;
+-#endif
++    return false;
+ }
+ 
+ void parse_and_precalculate_plot
