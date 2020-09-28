@@ -2,6 +2,8 @@
 
 This project attempts to port Qalculate to the web.
 
+Try it out at https://flaviutamas.com/qalculate-wasm/!
+
 ## Usage
 
 `make`
