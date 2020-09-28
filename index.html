@@ -1,16 +1,17 @@
 <!doctype html>
-<html lang="en-us">
+<html lang="en-us" style="margin: 2em;">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
     <title>Qalculate Web</title>
     <link rel="preload" href="build/qalc.js" as="script">
     <link rel="preload" href="build/qalc.wasm" as="fetch">
 </head>
 
 
-<body style="max-width: 600px; margin-left: auto; margin-right: auto">
+<body style="max-width: 600px; margin-left: auto; margin-right: auto;">
     <h1>Qalculate!</h1>
 
     <p>This page is designed to test running Qalculate in the browser using WASM. At the moment, currencies and units
@@ -20,8 +21,9 @@
 
     <div id="status">Downloading...</div>
 
-    <input type="text" id="input" style="width: 100%; display: none;" placeholder="2x + 5 = 9">
-    <div id="result"></div>
+    <input type="text" id="input" style="width:100%; box-sizing: border-box; display: none; height: 3.5em;"
+        placeholder="2x + 5 = 9">
+    <div id="result" style="padding: 1em;margin-top: 2em;border-radius: .75em;background: #EEE;"></div>
 
     <script type='text/javascript'>
         var statusElement = document.getElementById('status');
@@ -91,6 +93,8 @@
         };
     </script>
     <script async type="text/javascript" src="build/qalc.js"></script>
+    <script data-goatcounter="https://j88og8.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </body>
 
 </html>
