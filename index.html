@@ -18,14 +18,15 @@
 
     <div id="status">Downloading...</div>
 
-
-    <input type="text" id="input" style="width: 100%" placeholder="1+2">
+    <input type="text" id="input" style="width: 100%; display: none;" placeholder="2x + 5 = 9">
     <div id="result"></div>
 
     <script type='text/javascript'>
         var statusElement = document.getElementById('status');
         const resultEl = document.getElementById('result');
-        document.getElementById('input').oninput = (ev) => {
+        const inputEl = document.getElementById('input');
+
+        inputEl.oninput = (ev) => {
             const text = ev.target.value;
             const resultPtr = calculate(calc, text, 1000);
             const result = UTF8ToString(resultPtr);
@@ -48,6 +49,8 @@
                     calculate(calc, '1+1', 1000)
                 }
                 console.timeEnd('calc x1000')
+
+                inputEl.style.display = "inline-block";
             }],
             print: function (text) {
                 if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
