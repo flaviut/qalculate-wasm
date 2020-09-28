@@ -7,19 +7,31 @@
     <title>Emscripten-Generated Code</title>
 </head>
 
+
 <body>
-    <div class="spinner" id='spinner'></div>
-    <div class="emscripten" id="status">Downloading...</div>
+    <div id="status">Downloading...</div>
+
+
+    <input type="text" id="input">
+    <div id="result"></div>
 
     <script type='text/javascript'>
         var statusElement = document.getElementById('status');
-        var spinnerElement = document.getElementById('spinner');
+        const resultEl = document.getElementById('result');
+        document.getElementById('input').oninput = (ev) => {
+            const text = ev.target.value;
+            const resultPtr = calculate(calc, text, 1000);
+            const result = UTF8ToString(resultPtr);
+            free(resultPtr);
+            resultEl.textContent = result
+        }
 
         var Module = {
             preRun: [],
             postRun: [() => {
-                window.calculate = Module.cwrap('calculate', 'string', ['number', 'string', 'number'])
+                window.calculate = Module.cwrap('calculate', 'number', ['number', 'string', 'number'])
                 window.newCalculator = Module.cwrap('newCalculator', 'number', [])
+                window.free = Module.cwrap('free', 'void', ['number'])
 
                 console.time('new')
                 window.calc = newCalculator()
@@ -48,9 +60,6 @@
                 Module.setStatus.last.text = text;
                 if (m) {
                     text = m[1];
-                    spinnerElement.hidden = false;
-                } else {
-                    if (!text) spinnerElement.style.display = 'none';
                 }
                 statusElement.innerHTML = text;
             },
@@ -64,7 +73,6 @@
         window.onerror = function (event) {
             // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
             Module.setStatus('Exception thrown, see JavaScript console');
-            spinnerElement.style.display = 'none';
             Module.setStatus = function (text) {
                 if (text) Module.printErr('[post-exception status] ' + text);
             };

@@ -6,7 +6,9 @@ extern "C" {
 }
 
 void *newCalculator() {
-    return new Calculator();
+    Calculator *calc = new Calculator();
+
+    return calc;
 }
 
 char *calculate(void *calculator, char *text, int msecs) {
