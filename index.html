@@ -8,11 +8,15 @@
 </head>
 
 
-<body>
+<body style="max-width: 600px; margin-left: auto; margin-right: auto">
+    <h1>Qalculate!</h1>
+
+    <p>This page is designed to test running Qalculate in the browser using WASM. At the moment, currencies and units are not supported, as those require external resources.</p>
+
     <div id="status">Downloading...</div>
 
 
-    <input type="text" id="input">
+    <input type="text" id="input" style="width: 100%" placeholder="1+2">
     <div id="result"></div>
 
     <script type='text/javascript'>
