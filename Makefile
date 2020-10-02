@@ -70,7 +70,7 @@ sources/emsdk/upstream/.emsdk_version: sources/emsdk
 	./emsdk activate 2.0.4
 	popd
 
-install/lib/libxml2.a: sources/emsdk/upstream/.emsdk_version sources/libxml2
+install/lib/libxml2.a: sources/emsdk/upstream/.emsdk_version sources/libxml2/*.c
 	. sources/emsdk/emsdk_env.sh
 	pushd sources/libxml2
 	emconfigure ./configure --host none --prefix="${PREFIX}" \
@@ -78,7 +78,7 @@ install/lib/libxml2.a: sources/emsdk/upstream/.emsdk_version sources/libxml2
 	make PROGRAMS= -j "$(shell nproc)" install 
 	popd
 
-install/lib/libgmp.a: sources/emsdk/upstream/.emsdk_version sources/gmp
+install/lib/libgmp.a: sources/emsdk/upstream/.emsdk_version sources/gmp/*.c
 	. sources/emsdk/emsdk_env.sh
 	pushd sources/gmp
 	emconfigure ./configure --host none --prefix="${PREFIX}" \
@@ -87,7 +87,7 @@ install/lib/libgmp.a: sources/emsdk/upstream/.emsdk_version sources/gmp
 	make -j "$(shell nproc)" install
 	popd
 
-install/lib/libmpfr.a: sources/emsdk/upstream/.emsdk_version sources/mpfr install/lib/libgmp.a
+install/lib/libmpfr.a: sources/emsdk/upstream/.emsdk_version sources/mpfr/src/*.c install/lib/libgmp.a
 	. sources/emsdk/emsdk_env.sh
 	pushd sources/mpfr
 	emconfigure ./configure --host none --prefix="${PREFIX}" \
