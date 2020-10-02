@@ -17,11 +17,6 @@ sources/emsdk.tar.gz:
 	    https://github.com/emscripten-core/emsdk/archive/2.0.4.tar.gz \
 	    --out=sources/emsdk.tar.gz \
 	    --checksum=sha-256=55e2b4bd5a45fa5cba21eac4deaebda061edd4a2b8f753ffbce3f51eb19512da
-sources/libqalculate.tar.gz:
-	aria2c --check-integrity=true --auto-file-renaming=false \
-	    https://github.com/Qalculate/libqalculate/releases/download/v3.13.0/libqalculate-3.13.0.tar.gz \
-	    --out=sources/libqalculate.tar.gz \
-	    --checksum=sha-256=329700f6ee9f634e5383598197efe94861cd49ce1d9b40b61558fa578d58de1c
 sources/gmp.tar.xz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
 	    https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz \
@@ -48,10 +43,11 @@ sources/gmp: sources/gmp.tar.xz
 	tar xf gmp.tar.xz
 	mv gmp-* gmp
 	popd
-sources/libqalculate: sources/libqalculate.tar.gz
+sources/libqalculate:
 	pushd sources
-	tar xf libqalculate.tar.gz
-	mv libqalculate-* libqalculate
+	git clone git@github.com:Qalculate/libqalculate.git
+	cd libqalculate
+	git reset --hard 57e1593e9074d6f491d60a8afa4013375e199b9f
 	popd
 sources/mpfr: sources/mpfr.tar.xz
 	pushd sources
@@ -75,7 +71,7 @@ install/lib/libxml2.a: sources/emsdk/upstream/.emsdk_version sources/libxml2/*.c
 	pushd sources/libxml2
 	emconfigure ./configure --host none --prefix="${PREFIX}" \
 	    --with-minimum --with-sax1 --with-tree --with-output
-	make PROGRAMS= -j "$(shell nproc)" install 
+	make PROGRAMS= -j "$(shell nproc)" install
 	popd
 
 install/lib/libgmp.a: sources/emsdk/upstream/.emsdk_version sources/gmp/*.c
@@ -99,7 +95,10 @@ install/lib/libqalculate.a: sources/emsdk/upstream/.emsdk_version sources/libqal
 	. sources/emsdk/emsdk_env.sh
 	pushd sources/libqalculate
 	OUT="$$(patch -p1 --forward < $(ROOT_DIR)/libqalculate-popen.patch)" || echo "$${OUT}" | grep "Skipping patch" -q || (echo "$OUT" && false);
-	LIBXML_CFLAGS="-I${PREFIX}/include/libxml2" LIBXML_LIBS="${LDFLAGS}" emconfigure ./configure --host none --prefix="${PREFIX}" --without-libcurl --without-icu --disable-textport --disable-nls
+	NOCONFIGURE=true ./autogen.sh
+	LIBXML_CFLAGS="-I${PREFIX}/include/libxml2" LIBXML_LIBS="${LDFLAGS}" emconfigure ./configure --host none --prefix="${PREFIX}" \
+		--without-libcurl --without-icu --disable-textport --disable-nls \
+		--enable-compiled-definitions
 	make -j "$(shell nproc)" install
 	popd
 
