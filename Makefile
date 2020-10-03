@@ -19,17 +19,17 @@ lib/emsdk.tar.gz:
 	    --checksum=sha-256=55e2b4bd5a45fa5cba21eac4deaebda061edd4a2b8f753ffbce3f51eb19512da
 lib/gmp.tar.xz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
-	    https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz \
+	    https://ftp.gnu.org/gnu/gmp/gmp-6.2.0.tar.xz \
 	    --out=lib/gmp.tar.xz \
 	    --checksum=sha-256=258e6cd51b3fbdfc185c716d55f82c08aff57df0c6fbd143cf6ed561267a1526
 lib/mpfr.tar.xz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
-	    https://www.mpfr.org/mpfr-current/mpfr-4.1.0.tar.xz \
+	    https://ftp.gnu.org/gnu/mpfr/mpfr-4.1.0.tar.xz \
 	    --out=lib/mpfr.tar.xz \
 	    --checksum=sha-256=0c98a3f1732ff6ca4ea690552079da9c597872d30e96ec28414ee23c95558a7f
 lib/libxml2.tar.gz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
-	    ftp://xmlsoft.org/libxml2/libxml2-2.9.10.tar.gz \
+	    http://xmlsoft.org/sources/libxml2-2.9.10.tar.gz \
 	    --out=lib/libxml2.tar.gz \
 	    --checksum=sha-256=aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f
 
