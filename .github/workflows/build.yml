@@ -17,6 +17,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Cache multiple paths
+        uses: actions/cache@v2
+        with:
+          path: lib
+          key: $${{ hashFiles('Makefile') }}
+  
       - name: Build code
         run: make deploy -j$(nproc)
 
