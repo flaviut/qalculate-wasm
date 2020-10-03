@@ -48,7 +48,7 @@ lib/libqalculate:
 	pushd lib
 	git clone https://github.com/flaviut/libqalculate.git
 	cd libqalculate
-	git reset --hard f9298c79edd9466fb699283c91afd55e72bac199
+	git reset --hard 59da6f20dc54401d24c29513f27458fb03a11c3e
 	popd
 lib/mpfr: lib/mpfr.tar.xz
 	pushd lib
