@@ -8,6 +8,7 @@ extern "C" {
 void *newCalculator() {
     Calculator *calc = new Calculator();
 
+    calc->loadGlobalDefinitions();
     return calc;
 }
 
