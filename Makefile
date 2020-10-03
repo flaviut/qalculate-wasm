@@ -46,9 +46,9 @@ lib/gmp: lib/gmp.tar.xz
 lib/libqalculate:
 	mkdir -p lib
 	pushd lib
-	git clone https://github.com/flaviut/libqalculate.git
+	git clone https://github.com/Qalculate/libqalculate.git
 	cd libqalculate
-	git reset --hard 59da6f20dc54401d24c29513f27458fb03a11c3e
+	git reset --hard 966270230cb162c8bbf599ddd634c27c6bbf5dcd
 	popd
 lib/mpfr: lib/mpfr.tar.xz
 	pushd lib
