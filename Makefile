@@ -102,13 +102,14 @@ install/lib/libqalculate.a: sources/emsdk/upstream/.emsdk_version sources/libqal
 	make -j "$(shell nproc)" install
 	popd
 
-build/qalc.js: sources/emsdk/upstream/.emsdk_version install/lib/libqalculate.a
+build/qalc.js build/qalc.wasm: sources/emsdk/upstream/.emsdk_version install/lib/libqalculate.a
 	. sources/emsdk/emsdk_env.sh
 	mkdir -p build
 	export EMMAKEN_CFLAGS="$(CFLAGS) $(CXXFLAGS) $(LDFLAGS)"
 	emcc \
 	    --source-map-base http://localhost:8000/build/ \
-	    -s DEMANGLE_SUPPORT=1 -s WARN_UNALIGNED=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+	    -Oz -gseparate-dwarf \
+	    -s WARN_UNALIGNED=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s FILESYSTEM=0 \
 	    -s EXPORTED_FUNCTIONS='["_calculate", "_free", "_newCalculator"]' \
 	    -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' \
 	    -llibqalculate -lgmp -lmpfr -lxml2 \
