@@ -18,14 +18,14 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install deps
-        run: sudo apt install libtool-bin
+        run: sudo apt install libtool-bin intltool
 
       - name: Cache multiple paths
         uses: actions/cache@v2
         with:
           path: lib
           key: $${{ hashFiles('Makefile') }}
-  
+
       - name: Build code
         run: make deploy -j$(nproc)
 
