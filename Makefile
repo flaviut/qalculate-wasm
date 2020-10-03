@@ -129,3 +129,9 @@ build/qalc.js build/qalc.wasm: lib/emsdk/upstream/.emsdk_version lib/install/lib
 
 serve: build/qalc.js
 	python3 -m http.server 8000
+
+.PHONY: deploy
+deploy: build/qalc.js index.html
+	mkdir -p public/build
+	cp build/* public/build/
+	cp index.html public/
