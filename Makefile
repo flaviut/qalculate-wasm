@@ -44,10 +44,11 @@ sources/gmp: sources/gmp.tar.xz
 	mv gmp-* gmp
 	popd
 sources/libqalculate:
+	mkdir -p sources
 	pushd sources
-	git clone https://github.com/Qalculate/libqalculate.git
+	git clone https://github.com/flaviut/libqalculate.git
 	cd libqalculate
-	git reset --hard 0a88110a07d5c4fb0cd269bedbe570fb46239b8f
+	git reset --hard 7cd52f6226b10ce33eac46a513800b63b73f65c8
 	popd
 sources/mpfr: sources/mpfr.tar.xz
 	pushd sources
@@ -64,43 +65,52 @@ sources/emsdk/upstream/.emsdk_version: sources/emsdk
 	pushd sources/emsdk
 	./emsdk install 2.0.4
 	./emsdk activate 2.0.4
-	popd
 
-install/lib/libxml2.a: sources/emsdk/upstream/.emsdk_version sources/libxml2/*.c
+sources/build/libxml2/Makefile: sources/emsdk/upstream/.emsdk_version sources/libxml2
 	. sources/emsdk/emsdk_env.sh
-	pushd sources/libxml2
-	emconfigure ./configure --host none --prefix="${PREFIX}" \
+	mkdir -p sources/build/libxml2
+	cd sources/build/libxml2
+	emconfigure ../../libxml2/configure --host none --prefix="${PREFIX}" \
 	    --with-minimum --with-sax1 --with-tree --with-output
-	make PROGRAMS= -j "$(shell nproc)" install
-	popd
-
-install/lib/libgmp.a: sources/emsdk/upstream/.emsdk_version sources/gmp/*.c
+sources/build/gmp/Makefile: sources/emsdk/upstream/.emsdk_version sources/gmp
 	. sources/emsdk/emsdk_env.sh
-	pushd sources/gmp
-	emconfigure ./configure --host none --prefix="${PREFIX}" \
+	mkdir -p sources/build/gmp
+	cd sources/build/gmp
+	emconfigure ../../gmp/configure --host none --prefix="${PREFIX}" \
 		--disable-assembly --disable-cxx --disable-fft \
 		--enable-alloca=notreentrant
-	make -j "$(shell nproc)" install
-	popd
-
-install/lib/libmpfr.a: sources/emsdk/upstream/.emsdk_version sources/mpfr/src/*.c install/lib/libgmp.a
+sources/build/mpfr/Makefile: sources/emsdk/upstream/.emsdk_version sources/mpfr install/lib/libgmp.a
 	. sources/emsdk/emsdk_env.sh
-	pushd sources/mpfr
-	emconfigure ./configure --host none --prefix="${PREFIX}" \
+	mkdir -p sources/build/mpfr
+	cd sources/build/mpfr
+	emconfigure ../../mpfr/configure --host none --prefix="${PREFIX}" \
 		--disable-thread-safe --enable-decimal-float=no
-	make -j "$(shell nproc)" install
-	popd
-
-install/lib/libqalculate.a: sources/emsdk/upstream/.emsdk_version sources/libqalculate install/lib/libgmp.a install/lib/libmpfr.a install/lib/libxml2.a
+sources/build/libqalculate/Makefile: sources/emsdk/upstream/.emsdk_version sources/libqalculate install/lib/libgmp.a install/lib/libmpfr.a install/lib/libxml2.a
 	. sources/emsdk/emsdk_env.sh
-	pushd sources/libqalculate
-	OUT="$$(patch -p1 --forward < $(ROOT_DIR)/libqalculate-popen.patch)" || echo "$${OUT}" | grep "Skipping patch" -q || (echo "$OUT" && false);
-	NOCONFIGURE=true ./autogen.sh
-	LIBXML_CFLAGS="-I${PREFIX}/include/libxml2" LIBXML_LIBS="${LDFLAGS}" emconfigure ./configure --host none --prefix="${PREFIX}" \
-		--without-libcurl --without-icu --disable-textport --disable-nls \
-		--enable-compiled-definitions
-	make -j "$(shell nproc)" install
-	popd
+	pushd sources/libqalculate && NOCONFIGURE=true ./autogen.sh && 	popd
+	mkdir -p sources/build/libqalculate
+	cd sources/build/libqalculate
+	LIBXML_CFLAGS="-I${PREFIX}/include/libxml2" LIBXML_LIBS="${LDFLAGS}" \
+	    emconfigure ../../libqalculate/configure \
+	        --host none --prefix="${PREFIX}" \
+		    --without-libcurl --without-icu --disable-textport --disable-nls --without-gnuplot-call \
+		    --enable-compiled-definitions
+
+install/lib/libxml2.a: sources/emsdk/upstream/.emsdk_version sources/build/libxml2/Makefile
+	. sources/emsdk/emsdk_env.sh
+	$(MAKE) -C sources/build/libxml2 PROGRAMS= install
+
+install/lib/libgmp.a: sources/emsdk/upstream/.emsdk_version sources/build/gmp/Makefile
+	. sources/emsdk/emsdk_env.sh
+	$(MAKE) -C sources/build/gmp install
+
+install/lib/libmpfr.a: sources/emsdk/upstream/.emsdk_version sources/build/mpfr/Makefile
+	. sources/emsdk/emsdk_env.sh
+	$(MAKE) -C sources/build/mpfr install
+
+install/lib/libqalculate.a: sources/emsdk/upstream/.emsdk_version sources/build/libqalculate/Makefile
+	. sources/emsdk/emsdk_env.sh
+	$(MAKE) -C sources/build/libqalculate install
 
 build/qalc.js build/qalc.wasm: sources/emsdk/upstream/.emsdk_version install/lib/libqalculate.a
 	. sources/emsdk/emsdk_env.sh
