@@ -17,6 +17,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install deps
+        run: sudo apt install libtool-bin
+
       - name: Cache multiple paths
         uses: actions/cache@v2
         with:
