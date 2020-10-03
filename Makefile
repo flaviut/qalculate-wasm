@@ -48,7 +48,7 @@ lib/libqalculate:
 	pushd lib
 	git clone https://github.com/flaviut/libqalculate.git
 	cd libqalculate
-	git reset --hard e8540a374802a4c5f98dd2a73a7ad860934285aa
+	git reset --hard f9298c79edd9466fb699283c91afd55e72bac199
 	popd
 lib/mpfr: lib/mpfr.tar.xz
 	pushd lib
@@ -87,9 +87,9 @@ lib/build/mpfr/Makefile: lib/emsdk/upstream/.emsdk_version lib/mpfr lib/install/
 		--disable-thread-safe --enable-decimal-float=no
 lib/build/libqalculate/Makefile: lib/emsdk/upstream/.emsdk_version lib/libqalculate lib/install/lib/libgmp.a lib/install/lib/libmpfr.a lib/install/lib/libxml2.a
 	. lib/emsdk/emsdk_env.sh
-	pushd lib/libqalculate && NOCONFIGURE=true ./autogen.sh && 	popd
 	mkdir -p lib/build/libqalculate
 	cd lib/build/libqalculate
+	NOCONFIGURE=true ../../libqalculate/autogen.sh
 	LIBXML_CFLAGS="-I${PREFIX}/include/libxml2" LIBXML_LIBS="${LDFLAGS}" \
 	    emconfigure ../../libqalculate/configure \
 	        --host none --prefix="${PREFIX}" \
