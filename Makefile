@@ -3,7 +3,7 @@ SHELL := /bin/bash
 .SHELLFLAGS = -ec
 
 ROOT_DIR := $(PWD)
-export PREFIX=$(ROOT_DIR)/install/
+export PREFIX=$(ROOT_DIR)/lib/install/
 export CFLAGS=-I$(PREFIX)/include -O3 -flto --profiling
 export CXXFLAGS=$(CFLAGS) -fno-rtti -fno-exceptions
 export LDFLAGS=-L$(PREFIX)/lib -flto
@@ -12,108 +12,108 @@ export LDFLAGS=-L$(PREFIX)/lib -flto
 .PHONY: serve default
 default: serve
 
-sources/emsdk.tar.gz:
+lib/emsdk.tar.gz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
 	    https://github.com/emscripten-core/emsdk/archive/2.0.4.tar.gz \
-	    --out=sources/emsdk.tar.gz \
+	    --out=lib/emsdk.tar.gz \
 	    --checksum=sha-256=55e2b4bd5a45fa5cba21eac4deaebda061edd4a2b8f753ffbce3f51eb19512da
-sources/gmp.tar.xz:
+lib/gmp.tar.xz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
 	    https://gmplib.org/download/gmp/gmp-6.2.0.tar.xz \
-	    --out=sources/gmp.tar.xz \
+	    --out=lib/gmp.tar.xz \
 	    --checksum=sha-256=258e6cd51b3fbdfc185c716d55f82c08aff57df0c6fbd143cf6ed561267a1526
-sources/mpfr.tar.xz:
+lib/mpfr.tar.xz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
 	    https://www.mpfr.org/mpfr-current/mpfr-4.1.0.tar.xz \
-	    --out=sources/mpfr.tar.xz \
+	    --out=lib/mpfr.tar.xz \
 	    --checksum=sha-256=0c98a3f1732ff6ca4ea690552079da9c597872d30e96ec28414ee23c95558a7f
-sources/libxml2.tar.gz:
+lib/libxml2.tar.gz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
 	    ftp://xmlsoft.org/libxml2/libxml2-2.9.10.tar.gz \
-	    --out=sources/libxml2.tar.gz \
+	    --out=lib/libxml2.tar.gz \
 	    --checksum=sha-256=aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f
 
-sources/emsdk: sources/emsdk.tar.gz
-	pushd sources
+lib/emsdk: lib/emsdk.tar.gz
+	pushd lib
 	tar xf emsdk.tar.gz
 	mv emsdk-* emsdk
 	popd
-sources/gmp: sources/gmp.tar.xz
-	pushd sources
+lib/gmp: lib/gmp.tar.xz
+	pushd lib
 	tar xf gmp.tar.xz
 	mv gmp-* gmp
 	popd
-sources/libqalculate:
-	mkdir -p sources
-	pushd sources
+lib/libqalculate:
+	mkdir -p lib
+	pushd lib
 	git clone https://github.com/flaviut/libqalculate.git
 	cd libqalculate
-	git reset --hard 7cd52f6226b10ce33eac46a513800b63b73f65c8
+	git reset --hard e8540a374802a4c5f98dd2a73a7ad860934285aa
 	popd
-sources/mpfr: sources/mpfr.tar.xz
-	pushd sources
+lib/mpfr: lib/mpfr.tar.xz
+	pushd lib
 	tar xf mpfr.tar.xz
 	mv mpfr-* mpfr
 	popd
-sources/libxml2: sources/libxml2.tar.gz
-	pushd sources
+lib/libxml2: lib/libxml2.tar.gz
+	pushd lib
 	tar xf libxml2.tar.gz
 	mv libxml2-* libxml2
 	popd
 
-sources/emsdk/upstream/.emsdk_version: sources/emsdk
-	pushd sources/emsdk
+lib/emsdk/upstream/.emsdk_version: lib/emsdk
+	pushd lib/emsdk
 	./emsdk install 2.0.4
 	./emsdk activate 2.0.4
 
-sources/build/libxml2/Makefile: sources/emsdk/upstream/.emsdk_version sources/libxml2
-	. sources/emsdk/emsdk_env.sh
-	mkdir -p sources/build/libxml2
-	cd sources/build/libxml2
+lib/build/libxml2/Makefile: lib/emsdk/upstream/.emsdk_version lib/libxml2
+	. lib/emsdk/emsdk_env.sh
+	mkdir -p lib/build/libxml2
+	cd lib/build/libxml2
 	emconfigure ../../libxml2/configure --host none --prefix="${PREFIX}" \
 	    --with-minimum --with-sax1 --with-tree --with-output
-sources/build/gmp/Makefile: sources/emsdk/upstream/.emsdk_version sources/gmp
-	. sources/emsdk/emsdk_env.sh
-	mkdir -p sources/build/gmp
-	cd sources/build/gmp
+lib/build/gmp/Makefile: lib/emsdk/upstream/.emsdk_version lib/gmp
+	. lib/emsdk/emsdk_env.sh
+	mkdir -p lib/build/gmp
+	cd lib/build/gmp
 	emconfigure ../../gmp/configure --host none --prefix="${PREFIX}" \
 		--disable-assembly --disable-cxx --disable-fft \
 		--enable-alloca=notreentrant
-sources/build/mpfr/Makefile: sources/emsdk/upstream/.emsdk_version sources/mpfr install/lib/libgmp.a
-	. sources/emsdk/emsdk_env.sh
-	mkdir -p sources/build/mpfr
-	cd sources/build/mpfr
+lib/build/mpfr/Makefile: lib/emsdk/upstream/.emsdk_version lib/mpfr lib/install/lib/libgmp.a
+	. lib/emsdk/emsdk_env.sh
+	mkdir -p lib/build/mpfr
+	cd lib/build/mpfr
 	emconfigure ../../mpfr/configure --host none --prefix="${PREFIX}" \
 		--disable-thread-safe --enable-decimal-float=no
-sources/build/libqalculate/Makefile: sources/emsdk/upstream/.emsdk_version sources/libqalculate install/lib/libgmp.a install/lib/libmpfr.a install/lib/libxml2.a
-	. sources/emsdk/emsdk_env.sh
-	pushd sources/libqalculate && NOCONFIGURE=true ./autogen.sh && 	popd
-	mkdir -p sources/build/libqalculate
-	cd sources/build/libqalculate
+lib/build/libqalculate/Makefile: lib/emsdk/upstream/.emsdk_version lib/libqalculate lib/install/lib/libgmp.a lib/install/lib/libmpfr.a lib/install/lib/libxml2.a
+	. lib/emsdk/emsdk_env.sh
+	pushd lib/libqalculate && NOCONFIGURE=true ./autogen.sh && 	popd
+	mkdir -p lib/build/libqalculate
+	cd lib/build/libqalculate
 	LIBXML_CFLAGS="-I${PREFIX}/include/libxml2" LIBXML_LIBS="${LDFLAGS}" \
 	    emconfigure ../../libqalculate/configure \
 	        --host none --prefix="${PREFIX}" \
 		    --without-libcurl --without-icu --disable-textport --disable-nls --without-gnuplot-call \
 		    --enable-compiled-definitions
 
-install/lib/libxml2.a: sources/emsdk/upstream/.emsdk_version sources/build/libxml2/Makefile
-	. sources/emsdk/emsdk_env.sh
-	$(MAKE) -C sources/build/libxml2 PROGRAMS= install
+lib/install/lib/libxml2.a: lib/emsdk/upstream/.emsdk_version lib/build/libxml2/Makefile
+	. lib/emsdk/emsdk_env.sh
+	$(MAKE) -C lib/build/libxml2 PROGRAMS= install
 
-install/lib/libgmp.a: sources/emsdk/upstream/.emsdk_version sources/build/gmp/Makefile
-	. sources/emsdk/emsdk_env.sh
-	$(MAKE) -C sources/build/gmp install
+lib/install/lib/libgmp.a: lib/emsdk/upstream/.emsdk_version lib/build/gmp/Makefile
+	. lib/emsdk/emsdk_env.sh
+	$(MAKE) -C lib/build/gmp install
 
-install/lib/libmpfr.a: sources/emsdk/upstream/.emsdk_version sources/build/mpfr/Makefile
-	. sources/emsdk/emsdk_env.sh
-	$(MAKE) -C sources/build/mpfr install
+lib/install/lib/libmpfr.a: lib/emsdk/upstream/.emsdk_version lib/build/mpfr/Makefile
+	. lib/emsdk/emsdk_env.sh
+	$(MAKE) -C lib/build/mpfr install
 
-install/lib/libqalculate.a: sources/emsdk/upstream/.emsdk_version sources/build/libqalculate/Makefile
-	. sources/emsdk/emsdk_env.sh
-	$(MAKE) -C sources/build/libqalculate install
+lib/install/lib/libqalculate.a: lib/emsdk/upstream/.emsdk_version lib/build/libqalculate/Makefile
+	. lib/emsdk/emsdk_env.sh
+	$(MAKE) -C lib/build/libqalculate install
 
-build/qalc.js build/qalc.wasm: sources/emsdk/upstream/.emsdk_version install/lib/libqalculate.a
-	. sources/emsdk/emsdk_env.sh
+build/qalc.js build/qalc.wasm: lib/emsdk/upstream/.emsdk_version lib/install/lib/libqalculate.a
+	. lib/emsdk/emsdk_env.sh
 	mkdir -p build
 	export EMMAKEN_CFLAGS="$(CFLAGS) $(CXXFLAGS) $(LDFLAGS)"
 	emcc \
