@@ -45,9 +45,9 @@ sources/gmp: sources/gmp.tar.xz
 	popd
 sources/libqalculate:
 	pushd sources
-	git clone git@github.com:Qalculate/libqalculate.git
+	git clone https://github.com/Qalculate/libqalculate.git
 	cd libqalculate
-	git reset --hard 57e1593e9074d6f491d60a8afa4013375e199b9f
+	git reset --hard 0a88110a07d5c4fb0cd269bedbe570fb46239b8f
 	popd
 sources/mpfr: sources/mpfr.tar.xz
 	pushd sources
