@@ -112,7 +112,7 @@ lib/install/lib/libqalculate.a: lib/emsdk/upstream/.emsdk_version lib/build/libq
 	. lib/emsdk/emsdk_env.sh
 	$(MAKE) -C lib/build/libqalculate install
 
-build/qalc.js build/qalc.wasm: lib/emsdk/upstream/.emsdk_version lib/install/lib/libqalculate.a
+build/qalc.js build/qalc.wasm: lib/emsdk/upstream/.emsdk_version lib/install/lib/libqalculate.a $(wildcard src/*.cpp)
 	. lib/emsdk/emsdk_env.sh
 	mkdir -p build
 	export EMMAKEN_CFLAGS="$(CFLAGS) $(CXXFLAGS) $(LDFLAGS)"
@@ -123,7 +123,7 @@ build/qalc.js build/qalc.wasm: lib/emsdk/upstream/.emsdk_version lib/install/lib
 	    -s EXPORTED_FUNCTIONS='["_calculate", "_free", "_newCalculator"]' \
 	    -s EXTRA_EXPORTED_RUNTIME_METHODS='["cwrap"]' \
 	    -llibqalculate -lgmp -lmpfr -lxml2 \
-	    $(ROOT_DIR)/test.cpp \
+	    $(ROOT_DIR)/src/*.cpp \
 	    -o build/qalc.js
 
 
