@@ -14,14 +14,14 @@ default: serve
 
 lib/emsdk.tar.gz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
-	    https://github.com/emscripten-core/emsdk/archive/2.0.4.tar.gz \
+	    https://github.com/emscripten-core/emsdk/archive/2.0.11.tar.gz \
 	    --out=lib/emsdk.tar.gz \
-	    --checksum=sha-256=55e2b4bd5a45fa5cba21eac4deaebda061edd4a2b8f753ffbce3f51eb19512da
+	    --checksum=sha-256=f366c569d10b5eedf56edab86f4e834ca3a5ca0bf4f9ab1818d8575afd10277b
 lib/gmp.tar.xz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
-	    https://ftp.gnu.org/gnu/gmp/gmp-6.2.0.tar.xz \
+	    https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz \
 	    --out=lib/gmp.tar.xz \
-	    --checksum=sha-256=258e6cd51b3fbdfc185c716d55f82c08aff57df0c6fbd143cf6ed561267a1526
+	    --checksum=sha-256=fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2
 lib/mpfr.tar.xz:
 	aria2c --check-integrity=true --auto-file-renaming=false \
 	    https://ftp.gnu.org/gnu/mpfr/mpfr-4.1.0.tar.xz \
@@ -46,9 +46,9 @@ lib/gmp: lib/gmp.tar.xz
 lib/libqalculate:
 	mkdir -p lib
 	pushd lib
-	git clone https://github.com/flaviut/libqalculate.git
+	git clone https://github.com/Qalculate/libqalculate.git
 	cd libqalculate
-	git reset --hard 59da6f20dc54401d24c29513f27458fb03a11c3e
+	git reset --hard v3.15.0
 	popd
 lib/mpfr: lib/mpfr.tar.xz
 	pushd lib
@@ -63,8 +63,8 @@ lib/libxml2: lib/libxml2.tar.gz
 
 lib/emsdk/upstream/.emsdk_version: lib/emsdk
 	pushd lib/emsdk
-	./emsdk install 2.0.4
-	./emsdk activate 2.0.4
+	./emsdk install 2.0.9
+	./emsdk activate 2.0.9
 
 lib/build/libxml2/Makefile: lib/emsdk/upstream/.emsdk_version lib/libxml2
 	. lib/emsdk/emsdk_env.sh
