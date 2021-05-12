@@ -115,7 +115,8 @@ lib/build/libqalculate/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,QALCULATE) | l
 	mkdir -p lib/build/libqalculate
 	cd lib/build/libqalculate
 	NOCONFIGURE=true ../../libqalculate/autogen.sh
-	LIBXML_CFLAGS="-I$(PREFIX)/include/libxml2" LIBXML_LIBS="$(LDFLAGS)" CFLAGS="-I$(PREFIX)/include" \
+	CFLAGS="-I$(PREFIX)/include" LDFLAGS="-L$(PREFIX)/lib" \
+	LIBXML_CFLAGS="-I$(PREFIX)/include/libxml2" LIBXML_LIBS="$(LDFLAGS)" \
 	    emconfigure ../../libqalculate/configure \
 	        --host none --prefix="$(PREFIX)" \
 		    --without-libcurl --without-icu --disable-textport --disable-nls --without-gnuplot-call \
