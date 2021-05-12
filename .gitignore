@@ -1,5 +1,7 @@
 /build
 /lib
+/public
+/public.zip
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/c,vim,c++,node,macos,linux,emacs,windows,intellij+all,visualstudio,visualstudiocode
