@@ -1,20 +1,14 @@
 #include <libqalculate/qalculate.h>
+#include <emscripten/bind.h>
 
-extern "C" {
-    void *newCalculator();
-    char *calculate(void *calculator, char *text, int msecs);
-}
+using namespace emscripten;
 
-void *newCalculator() {
-    Calculator *calc = new Calculator();
-
-    calc->loadGlobalDefinitions();
-    return calc;
-}
-
-char *calculate(void *calculator, char *text, int msecs) {
-    std::string result = ((Calculator *)calculator)->calculateAndPrint(text, msecs);
-    char *cstr = new char[result.length() + 1];
-    strcpy(cstr, result.c_str());
-    return cstr;
+EMSCRIPTEN_BINDINGS(calculator_bindings) {
+    class_<Calculator>("Calculator")
+        .constructor()
+        .function("reset", &Calculator::reset)
+        .function("loadGlobalDefinitions", select_overload<bool()>(&Calculator::loadGlobalDefinitions))
+        .function("calculateAndPrint", optional_override([](Calculator& self, std::string s, int msecs) {
+            return self.calculateAndPrint(s, msecs);
+        }));
 }
