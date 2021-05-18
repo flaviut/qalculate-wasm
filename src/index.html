@@ -9,10 +9,11 @@
     <title>Qalculate Web</title>
     <link rel="preload" href="qalc.js" as="script">
     <link rel="preload" href="qalc.wasm" as="fetch">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 
-<body style="max-width: 600px; margin-left: auto; margin-right: auto;">
+<body>
     <h1>Qalculate!</h1>
 
     <p>This page is designed to test running Qalculate in the browser using
@@ -25,11 +26,11 @@
 
     <div id="status">Downloading...</div>
 
-    <div style="display: none;">
-        <!-- templates -->
-        <input type="text" id="input" style="width:100%; box-sizing: border-box; height: 3.5em;"
-            placeholder="2x + 5 = 9">
-        <div id="result" style="padding: 1em;margin: 2em 0;border-radius: .75em;background: #EEE;"></div>
+    <div class="hide" id="cell-template">
+        <div class="cell">
+            <input type="text" class="cell-input" placeholder="2x + 5 = 9">
+            <div class="cell-result"></div>
+        </div>
     </div>
 
     <div id="cells">

@@ -1,44 +1,67 @@
 const statusElement = document.getElementById('status');
-const resultTmpl = document.getElementById('result');
-const inputTmpl = document.getElementById('input');
+const cellTmpl = document.querySelector('#cell-template .cell');
 const cells = document.getElementById('cells');
 
-let curResult, curInput;
+/** @typedef {node: HTMLElement, input: HTMLInputElement, result: HTMLElement} Cell */
+
+/** @type {Cell} */
+let curCell;
+
+/** @returns {Cell} */
+const getCell = (cellNode) => ({
+    node: cellNode,
+    input: cellNode.querySelector('.cell-input'),
+    result: cellNode.querySelector('.cell-result'),
+});
 
 function newCell() {
-    if (curInput){
-        curInput.readOnly = true;
+    if (curCell) {
+        curCell.input.readOnly = true;
     }
-    curResult = resultTmpl.cloneNode();
-    curInput = inputTmpl.cloneNode();
-    curInput.addEventListener('keypress', onKey)
-    cells.append(curInput, curResult);
-    focusCurrent();
+
+    curCell = getCell(cellTmpl.cloneNode(true));
+    curCell.input.addEventListener('keydown', onKey);
+    cells.append(curCell.node);
+    focusCell();
 }
 
-function focusCurrent() {
-    curInput.focus();
-    curResult.scrollIntoView()
+function focusCell(cell) {
+    const c = cell || curCell;
+    c.input.focus({ preventScroll: true });
+    c.node.scrollIntoView({ behavior: 'smooth' });
 }
 
+/** @param {KeyboardEvent} ev */
 function onKey(ev) {
-    if (ev.key == 'Enter') {
-        const text = ev.target.value
-        if (ev.target == curInput) {
-            curResult.textContent = calc.calculateAndPrint(text, 1000);
+    /** @type {HTMLInputElement} */
+    const inp = ev.target;
+    if (ev.key === 'Enter') {
+        const text = inp.value;
+        if (inp === curCell.input) {
+            curCell.result.textContent = calc.calculateAndPrint(text, 1000);
             newCell();
         } else {
-            curInput.value = text;
-            focusCurrent();
+            curCell.input.value = text;
+            focusCell();
         }
+    } else if (ev.key === 'ArrowUp' || ev.key === 'ArrowDown') {
+        const cellNode = inp.parentElement;
+        const adjacentCellNode =
+            ev.key === 'ArrowUp'
+                ? cellNode.previousElementSibling
+                : cellNode.nextElementSibling;
+        // it's null if e.g. we're at the top and go up
+        if (adjacentCellNode) {
+            focusCell(getCell(adjacentCellNode));
+        }
+        ev.preventDefault();
     }
 }
 
 
 
 var Module = {
-    preRun: [],
-    postRun: [() => {
+    postRun: () => {
         console.time('new')
         window.calc = new Module.Calculator()
         calc.loadGlobalDefinitions();
@@ -50,7 +73,7 @@ var Module = {
         console.timeEnd('calc x1000')
 
         newCell();
-    }],
+    },
     print: function (text) {
         if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
         console.log(text);

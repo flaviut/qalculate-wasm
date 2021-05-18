@@ -158,7 +158,7 @@ build/qalc.js: $(OBJS) $(call libfiles,$(LIBNAMES))
 	    -o build/qalc.js
 build/qalc.wasm: build/qalc.js
 
-PUBLIC_FILES = build/qalc.js build/qalc.wasm src/index.html src/main.js src/favicon.png
+PUBLIC_FILES = build/qalc.js build/qalc.wasm src/index.html src/main.js src/style.css src/favicon.png
 
 serve: deploy
 	python3 -m http.server -d public 8000
