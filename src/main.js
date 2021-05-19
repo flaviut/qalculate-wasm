@@ -14,12 +14,16 @@ const getCell = (cellNode) => ({
     result: cellNode.querySelector('.cell-result'),
 });
 
+let cellNum = 0;
+
 function newCell() {
     if (curCell) {
         curCell.input.readOnly = true;
     }
 
     curCell = getCell(cellTmpl.cloneNode(true));
+    cellNum += 1;
+    curCell.node.id = 'cell_' + cellNum;
     curCell.input.addEventListener('keydown', onKey);
     cells.append(curCell.node);
     focusCell();
@@ -28,6 +32,9 @@ function newCell() {
 function focusCell(cell) {
     const c = cell || curCell;
     c.input.focus({ preventScroll: true });
+    if (c.node !== curCell.node) {
+        c.input.select();
+    }
     c.node.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -46,11 +53,18 @@ function onKey(ev) {
         }
     } else if (ev.key === 'ArrowUp' || ev.key === 'ArrowDown') {
         const cellNode = inp.parentElement;
-        const adjacentCellNode =
+        const adjacent =
             ev.key === 'ArrowUp'
-                ? cellNode.previousElementSibling
-                : cellNode.nextElementSibling;
-        // it's null if e.g. we're at the top and go up
+                ? 'previousElementSibling'
+                : 'nextElementSibling';
+        let adjacentCellNode = cellNode;
+        do {
+            // this would be null if e.g. we're at the top and try to go up
+            adjacentCellNode = adjacentCellNode[adjacent];
+        } while (
+            adjacentCellNode != null &&
+            !adjacentCellNode.classList.contains('cell')
+        );
         if (adjacentCellNode) {
             focusCell(getCell(adjacentCellNode));
         }
@@ -58,7 +72,27 @@ function onKey(ev) {
     }
 }
 
+let gnuplotWorker;
 
+function runGnuplot(data_files, commands, extra_commandline, persist) {
+    if (!gnuplotWorker) {
+        gnuplotWorker = new Worker('gnuplot-worker.js');
+        gnuplotWorker.addEventListener('message', (ev) => {
+            const { id, output } = ev.data;
+            const url = URL.createObjectURL(new Blob([output], { type: 'image/svg+xml' }));
+            const img = new Image();
+            img.classList.add('plot');
+            img.src = url;
+            const cell_id = 'cell_' + id;
+            document.getElementById(cell_id).insertAdjacentElement('afterend', img);
+            setTimeout(() => {
+                focusCell();
+            }, 10);
+        });
+    }
+    gnuplotWorker.postMessage({ data_files, commands, extra_commandline, persist, id: cellNum });
+    return true;
+}
 
 var Module = {
     postRun: () => {

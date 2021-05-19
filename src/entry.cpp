@@ -1,5 +1,6 @@
 #include <libqalculate/qalculate.h>
 #include <emscripten/bind.h>
+#include <emscripten/val.h>
 
 using namespace emscripten;
 
@@ -10,6 +11,19 @@ Calculator* getCalculator() {
         new Calculator();
     }
     return CALCULATOR;
+}
+
+std::string qalc_gnuplot_data_dir() {
+    return "";
+}
+bool qalc_invoke_gnuplot(
+    std::vector<std::pair<std::string, std::string>> data_files,
+    std::string commands, std::string extra, bool persist) {
+    val data_obj = val::object();
+    for (auto file : data_files) {
+        data_obj.set(file.first, file.second);
+    }
+    return val::global("runGnuplot").call<bool>("call", val::undefined(), data_obj, commands, extra, persist);
 }
 
 EMSCRIPTEN_BINDINGS(calculator_bindings) {
