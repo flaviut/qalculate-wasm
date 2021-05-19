@@ -34,8 +34,8 @@ MPFR_CHKSUM := sha-256=0c98a3f1732ff6ca4ea690552079da9c597872d30e96ec28414ee23c9
 MPFR_REQS := gmp
 MPFR_URL = https://ftp.gnu.org/gnu/mpfr/mpfr-$(1).tar.xz
 
-XML2_VER := 2.9.10
-XML2_CHKSUM := sha-256=aafee193ffb8fe0c82d4afef6ef91972cbaf5feea100edc2f262750611b4be1f
+XML2_VER := 2.9.12
+XML2_CHKSUM := sha-256=c8d6681e38c56f172892c85ddc0852e1fd4b53b4209e7f4ebf17f7e2eae71d92
 XML2_URL = http://xmlsoft.org/sources/libxml2-$(1).tar.gz
 
 GNUPLOT_VER := 5.4.1
@@ -86,6 +86,7 @@ CD_BUILDDIR = mkdir -p $(@D) && cd $(@D)
 lib/build/libxml2/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,XML2) | lib/libxml2
 	$(EMSDK_ENV)
 	$(CD_BUILDDIR)
+	NOCONFIGURE=true ../../libxml2/autogen.sh
 	emconfigure ../../libxml2/configure --host none --prefix="$(PREFIX)" \
 	    --with-minimum --with-sax1 --with-tree --with-output
 lib/build/gmp/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,GMP) | lib/gmp
