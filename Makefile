@@ -12,8 +12,12 @@ prepend = $(foreach a,$(2),$(1)$(a))
 libfiles = $(foreach lib,$(1),$(LIBDIR)/lib$(lib).a)
 
 LIBDIR := lib/install/lib
-LIBNAMES := gmp mpfr xml2 qalculate
+ALL_LIBS := gmp mpfr xml2 qalculate
+ALL_DEPS := $(ALL_LIBS) gnuplot
+
 libreqs = $(call libfiles,$($(1)_REQS))
+
+QALCWASM_LIBS := qalculate gmp mpfr xml2
 
 QALCULATE_VER := 4092c3c900728bb336b3f189dcab531fae33d7f2
 QALCULATE_CHKSUM := sha-256=e7724621acd3efddeeb23f0f91a40fb0d9f10de4e7b2e7efae6ae3b09c240c9c
@@ -152,14 +156,14 @@ src/%.o: src/%.cpp $(LIBDIR)/libqalculate.a
 	$(EMSDK_ENV)
 	emcc --bind $(CXXFLAGS) -Oz -c $< -o $@
 
-build/qalc.js build/qalc.wasm &: $(OBJS) $(call libfiles,$(LIBNAMES))
+build/qalc.js build/qalc.wasm &: $(OBJS) $(call libfiles,$(QALCWASM_LIBS))
 	$(EMSDK_ENV)
 	mkdir -p $(@D)
 	emcc \
 	    --bind \
 	    $(LDFLAGS) \
 	    -s WARN_UNALIGNED=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s FILESYSTEM=0 \
-	    $(call prepend,-l,$(LIBNAMES)) \
+	    $(call prepend,-l,$(QALCWASM_LIBS)) \
 	    $(OBJS) \
 	    -o build/qalc.js
 
@@ -179,3 +183,9 @@ deploy: public.zip
 .PHONY: clean
 clean:
 	rm -rf $(OBJS) public/ build/ public.zip
+
+.PHONY: clean-deps
+clean-deps:
+	rm -f $(call libfiles,$(ALL_LIBS))
+	$(foreach libdir,$(call prepend,lib/build/,$(ALL_LIBS)),[ -d $(libdir) ] && make -C $(libdir) clean
+	)@true
