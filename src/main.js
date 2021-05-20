@@ -1,5 +1,6 @@
 const statusElement = document.getElementById('status');
 const cellTmpl = document.querySelector('#cell-template .cell');
+const plotErrTmpl = document.querySelector('#plot-template .plot-err');
 const cells = document.getElementById('cells');
 
 /** @typedef {node: HTMLElement, input: HTMLInputElement, result: HTMLElement} Cell */
@@ -72,25 +73,47 @@ function onKey(ev) {
     }
 }
 
+const emptySvg = `<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<svg
+ width="600" height="480"
+ viewBox="0 0 600 480"
+ xmlns="http://www.w3.org/2000/svg"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+/>`;
+
+let emptySvgUrl;
+let plot_id = 0;
 let gnuplotWorker;
 
+const makeSvgUrl = (data) => URL.createObjectURL(new Blob([data], { type: 'image/svg+xml' }));
 function runGnuplot(data_files, commands, extra_commandline, persist) {
     if (!gnuplotWorker) {
         gnuplotWorker = new Worker('gnuplot-worker.js');
         gnuplotWorker.addEventListener('message', (ev) => {
             const { id, output } = ev.data;
-            const url = URL.createObjectURL(new Blob([output], { type: 'image/svg+xml' }));
-            const img = new Image();
-            img.classList.add('plot');
-            img.src = url;
-            const cell_id = 'cell_' + id;
-            document.getElementById(cell_id).insertAdjacentElement('afterend', img);
-            setTimeout(() => {
-                focusCell();
-            }, 10);
+            const plot = document.getElementById('plot_' + id);
+            if (output) {
+                plot.src = makeSvgUrl(output);
+                setTimeout(() => {
+                    focusCell();
+                }, 10);
+            } else {
+                plot.replaceWith(plotErrTmpl.cloneNode(true));
+            }
         });
     }
-    gnuplotWorker.postMessage({ data_files, commands, extra_commandline, persist, id: cellNum });
+    if (!emptySvgUrl) {
+        emptySvgUrl = makeSvgUrl(emptySvg);
+    }
+
+    const img = new Image();
+    img.classList.add('plot');
+    img.src = emptySvgUrl;
+    const id = plot_id++;
+    img.id = 'plot_' + id;
+    curCell.node.insertAdjacentElement('afterend', img);
+
+    gnuplotWorker.postMessage({ data_files, commands, extra_commandline, persist, id });
     return true;
 }
 
