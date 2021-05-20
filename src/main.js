@@ -27,16 +27,16 @@ function newCell() {
     curCell.node.id = 'cell_' + cellNum;
     curCell.input.addEventListener('keydown', onKey);
     cells.append(curCell.node);
-    focusCell();
+    focusCell(curCell);
 }
 
+/** @param {Cell} cell */
 function focusCell(cell) {
-    const c = cell || curCell;
-    c.input.focus({ preventScroll: true });
-    if (c.node !== curCell.node) {
-        c.input.select();
+    cell.input.focus({ preventScroll: true });
+    if (cell.input.readOnly) {
+        cell.input.select();
     }
-    c.node.scrollIntoView({ behavior: 'smooth' });
+    cell.node.scrollIntoView({ behavior: 'smooth' });
 }
 
 /** @param {KeyboardEvent} ev */
@@ -46,11 +46,15 @@ function onKey(ev) {
     if (ev.key === 'Enter') {
         const text = inp.value;
         if (inp === curCell.input) {
-            curCell.result.textContent = calc.calculateAndPrint(text, 1000);
+            if (text.trim() !== '') {
+                curCell.result.textContent = calc.calculateAndPrint(text, 1000);
+            }
             newCell();
         } else {
-            curCell.input.value = text;
-            focusCell();
+            if (text.trim() !== '') {
+                curCell.input.value = text;
+            }
+            focusCell(curCell);
         }
     } else if (ev.key === 'ArrowUp' || ev.key === 'ArrowDown') {
         const cellNode = inp.parentElement;
@@ -95,7 +99,7 @@ function runGnuplot(data_files, commands, extra_commandline, persist) {
             if (output) {
                 plot.src = makeSvgUrl(output);
                 setTimeout(() => {
-                    focusCell();
+                    focusCell(curCell);
                 }, 10);
             } else {
                 plot.replaceWith(plotErrTmpl.cloneNode(true));
