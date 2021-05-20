@@ -4,9 +4,17 @@ SHELL := /bin/bash
 
 ROOT_DIR := $(PWD)
 PREFIX := $(ROOT_DIR)/lib/install
-CFLAGS := -I$(PREFIX)/include -O3 -flto --profiling
+CFLAGS := -I$(PREFIX)/include
 CXXFLAGS = $(CFLAGS) -fno-rtti -fno-exceptions -std=c++11 -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0
-LDFLAGS := -L$(PREFIX)/lib -flto -fno-rtti -Oz -gseparatedwarf --source-map-base http://localhost:8000
+LDFLAGS := -L$(PREFIX)/lib -fno-rtti
+
+ifdef RELEASE
+CFLAGS += -flto -Oz -O3
+LDFLAGS += -flto -Oz -O3
+else
+CFLAGS += -g
+LDFLAGS += -gsource-map --source-map-base http://localhost:8000
+endif
 
 prepend = $(foreach a,$(2),$(1)$(a))
 libfiles = $(foreach lib,$(1),$(LIBDIR)/lib$(lib).a)
@@ -25,8 +33,8 @@ QALCULATE_REQS := gmp mpfr xml2
 # QALCULATE_URL = https://github.com/Qalculate/libqalculate/releases/download/v$(1)/libqalculate-$(1).tar.gz
 QALCULATE_URL = https://github.com/Qalculate/libqalculate/archive/$(1).tar.gz
 
-EMSDK_VER := 2.0.11
-EMSDK_CHKSUM := sha-256=f366c569d10b5eedf56edab86f4e834ca3a5ca0bf4f9ab1818d8575afd10277b
+EMSDK_VER := 2.0.21
+EMSDK_CHKSUM := sha-256=906c0169578c4ffb1afd300627b79fc1fcbab03731765a11b96153063b743654
 EMSDK_URL = https://github.com/emscripten-core/emsdk/archive/$(1).tar.gz
 
 GMP_VER := 6.2.1
@@ -141,7 +149,6 @@ $(LIBDIR)/libqalculate.a: lib/build/libqalculate/Makefile
 	$(EMSDK_ENV)
 	$(make_lib)
 
-lib/build/gnuplot/src/gnuplot lib/build/gnuplot/src/gnuplot.wasm &: CFLAGS += -Oz
 lib/build/gnuplot/src/gnuplot lib/build/gnuplot/src/gnuplot.wasm &: lib/build/gnuplot/Makefile
 	$(EMSDK_ENV)
 	$(submake) gnuplot
@@ -162,7 +169,7 @@ build/qalc.js build/qalc.wasm &: $(OBJS) $(call libfiles,$(QALCWASM_LIBS))
 	emcc \
 	    --bind \
 	    $(LDFLAGS) \
-	    -s WARN_UNALIGNED=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s FILESYSTEM=0 \
+	    -s WARN_UNALIGNED=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s FILESYSTEM=0 -s ASSERTIONS=0 \
 	    $(call prepend,-l,$(QALCWASM_LIBS)) \
 	    $(OBJS) \
 	    -o build/qalc.js
