@@ -89,7 +89,8 @@ let emptySvgUrl;
 let plot_id = 0;
 let gnuplotWorker;
 
-const makeSvgUrl = (data) => URL.createObjectURL(new Blob([data], { type: 'image/svg+xml' }));
+const makeSvgUrl = (data) =>
+    URL.createObjectURL(new Blob([data], { type: 'image/svg+xml' }));
 function runGnuplot(data_files, commands, extra_commandline, persist) {
     if (!gnuplotWorker) {
         gnuplotWorker = new Worker('gnuplot-worker.js');
@@ -117,34 +118,43 @@ function runGnuplot(data_files, commands, extra_commandline, persist) {
     img.id = 'plot_' + id;
     curCell.node.insertAdjacentElement('afterend', img);
 
-    gnuplotWorker.postMessage({ data_files, commands, extra_commandline, persist, id });
+    gnuplotWorker.postMessage({
+        data_files,
+        commands,
+        extra_commandline,
+        persist,
+        id,
+    });
     return true;
 }
 
 var Module = {
     postRun: () => {
-        console.time('new')
-        window.calc = new Module.Calculator()
+        console.time('new');
+        window.calc = new Module.Calculator();
         calc.loadGlobalDefinitions();
-        console.timeEnd('new')
-        console.time('calc x1000')
+        console.timeEnd('new');
+        console.time('calc x1000');
         for (let i = 0; i < 1000; i++) {
-            calc.calculateAndPrint('1+1', 1000)
+            calc.calculateAndPrint('1+1', 1000);
         }
-        console.timeEnd('calc x1000')
+        console.timeEnd('calc x1000');
 
         newCell();
     },
     print: function (text) {
-        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        if (arguments.length > 1)
+            text = Array.prototype.slice.call(arguments).join(' ');
         console.log(text);
     },
     printErr: function (text) {
-        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        if (arguments.length > 1)
+            text = Array.prototype.slice.call(arguments).join(' ');
         console.error(text);
     },
     setStatus: function (text) {
-        if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+        if (!Module.setStatus.last)
+            Module.setStatus.last = { time: Date.now(), text: '' };
         if (text === Module.setStatus.last.text) return;
         var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
         var now = Date.now();
@@ -159,8 +169,16 @@ var Module = {
     totalDependencies: 0,
     monitorRunDependencies: function (left) {
         this.totalDependencies = Math.max(this.totalDependencies, left);
-        Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-    }
+        Module.setStatus(
+            left
+                ? 'Preparing... (' +
+                      (this.totalDependencies - left) +
+                      '/' +
+                      this.totalDependencies +
+                      ')'
+                : 'All downloads complete.'
+        );
+    },
 };
 Module.setStatus('Downloading...');
 window.onerror = function (event) {
