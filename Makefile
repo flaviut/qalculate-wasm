@@ -2,24 +2,25 @@
 SHELL := /bin/bash
 .SHELLFLAGS = -ec
 
-ROOT_DIR := $(PWD)
-PREFIX := $(ROOT_DIR)/lib/install
-CFLAGS := -I$(PREFIX)/include
-CXXFLAGS = $(CFLAGS) -fno-rtti -fno-exceptions -std=c++11 -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0
-LDFLAGS := -L$(PREFIX)/lib -fno-rtti
 
-ifdef RELEASE
-CFLAGS += -flto -Oz -O3
-LDFLAGS += -flto -Oz -O3
+ifneq ($(RELEASE),)
+extra_flags := -flto -Oz -O3
+build := build/release
 else
-CFLAGS += -g
-LDFLAGS += -gsource-map --source-map-base http://localhost:8000
+extra_flags := -g
+build := build/debug
 endif
+
+ROOT_DIR := $(PWD)
+PREFIX := $(ROOT_DIR)/$(build)/install
+CFLAGS := -I$(PREFIX)/include $(extra_flags)
+CXXFLAGS = $(CFLAGS) -fno-rtti -fno-exceptions -std=c++11 -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0
+LDFLAGS := -L$(PREFIX)/lib -fno-rtti $(extra_flags)
 
 prepend = $(foreach a,$(2),$(1)$(a))
 libfiles = $(foreach lib,$(1),$(LIBDIR)/lib$(lib).a)
 
-LIBDIR := lib/install/lib
+LIBDIR := $(build)/install/lib
 ALL_LIBS := gmp mpfr xml2 qalculate
 ALL_DEPS := $(ALL_LIBS) gnuplot
 
@@ -95,67 +96,65 @@ $(ACTIVATE_EMSDK): | lib/emsdk
 	$|/emsdk activate $(EMSDK_VER)
 
 CD_BUILDDIR = mkdir -p $(@D) && cd $(@D)
-lib/build/libxml2/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,XML2) | lib/libxml2
+$(build)/libxml2/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,XML2) | lib/libxml2
 	$(EMSDK_ENV)
 	$(CD_BUILDDIR)
-	NOCONFIGURE=true ../../libxml2/autogen.sh
-	emconfigure ../../libxml2/configure --host none --prefix="$(PREFIX)" \
+	NOCONFIGURE=true $(ROOT_DIR)/lib/libxml2/autogen.sh
+	emconfigure $(ROOT_DIR)/lib/libxml2/configure --host none --prefix="$(PREFIX)" \
 	    --with-minimum --with-sax1 --with-tree --with-output
-lib/build/gmp/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,GMP) | lib/gmp
+$(build)/gmp/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,GMP) | lib/gmp
 	$(EMSDK_ENV)
 	$(CD_BUILDDIR)
-	emconfigure ../../gmp/configure --host none --prefix="$(PREFIX)" \
+	emconfigure $(ROOT_DIR)/lib/gmp/configure --host none --prefix="$(PREFIX)" \
 		--disable-assembly --disable-cxx --disable-fft \
 		--enable-alloca=notreentrant
-lib/build/mpfr/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,MPFR) | lib/mpfr
+$(build)/mpfr/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,MPFR) | lib/mpfr
 	$(EMSDK_ENV)
 	$(CD_BUILDDIR)
-	emconfigure ../../mpfr/configure --host none --prefix="$(PREFIX)" \
+	emconfigure $(ROOT_DIR)/lib/mpfr/configure --host none --prefix="$(PREFIX)" \
 		--disable-thread-safe --enable-decimal-float=no \
 		--with-gmp=$(PREFIX)
-lib/build/libqalculate/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,QALCULATE) | lib/libqalculate
+$(build)/libqalculate/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,QALCULATE) | lib/libqalculate
 	$(EMSDK_ENV)
 	$(CD_BUILDDIR)
-	[[ -f ../../libqalculate/configure ]] || NOCONFIGURE=true ../../libqalculate/autogen.sh
+	[[ -f $(ROOT_DIR)/lib/libqalculate/configure ]] || NOCONFIGURE=true $(ROOT_DIR)/lib/libqalculate/autogen.sh
 	CFLAGS="-I$(PREFIX)/include" LDFLAGS="-L$(PREFIX)/lib" \
 	LIBXML_CFLAGS="-I$(PREFIX)/include/libxml2" LIBXML_LIBS="$(LDFLAGS)" \
-	    emconfigure ../../libqalculate/configure \
-	        --build "$$(../../libqalculate/config.guess)" --host none --prefix="$(PREFIX)" \
+	    emconfigure $(ROOT_DIR)/lib/libqalculate/configure \
+	        --build "$$($(ROOT_DIR)/lib/libqalculate/config.guess)" --host none --prefix="$(PREFIX)" \
 		    --without-libcurl --without-icu --disable-textport --disable-nls --with-gnuplot-call=byo \
 		    --enable-compiled-definitions
-lib/build/gnuplot/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,GNUPLOT) | lib/gnuplot
+$(build)/gnuplot/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,GNUPLOT) | lib/gnuplot
 	$(EMSDK_ENV)
 	$(CD_BUILDDIR)
-	emconfigure ../../gnuplot/configure \
+	emconfigure $(ROOT_DIR)/lib/gnuplot/configure \
 		--host none --prefix="$(PREFIX)" \
 		--without-readline --without-x --disable-h3d-quadtree --disable-wxwidgets
 
-submake = $(MAKE) -C $(<D) CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
-make_lib = $(submake) install
+submake_args = -C $(<D) CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
 
-$(LIBDIR)/libxml2.a: lib/build/libxml2/Makefile
+$(LIBDIR)/libxml2.a: $(build)/libxml2/Makefile
 	$(EMSDK_ENV)
-	$(make_lib) PROGRAMS=''
+	$(MAKE) $(submake_args) install PROGRAMS=''
 
-$(LIBDIR)/libgmp.a: lib/build/gmp/Makefile
+$(LIBDIR)/libgmp.a: $(build)/gmp/Makefile
 	$(EMSDK_ENV)
-	$(make_lib)
+	$(MAKE) $(submake_args) install
 
-$(LIBDIR)/libmpfr.a: lib/build/mpfr/Makefile
+$(LIBDIR)/libmpfr.a: $(build)/mpfr/Makefile
 	$(EMSDK_ENV)
-	$(make_lib)
+	$(MAKE) $(submake_args) install
 
-$(LIBDIR)/libqalculate.a: lib/build/libqalculate/Makefile
+$(LIBDIR)/libqalculate.a: $(build)/libqalculate/Makefile
 	$(EMSDK_ENV)
-	$(make_lib)
+	$(MAKE) $(submake_args) install
 
-lib/build/gnuplot/src/gnuplot lib/build/gnuplot/src/gnuplot.wasm &: lib/build/gnuplot/Makefile
+$(build)/gnuplot.js $(build)/gnuplot.wasm &: $(build)/gnuplot/Makefile
 	$(EMSDK_ENV)
-	$(submake) gnuplot
-build/gnuplot.js: lib/build/gnuplot/src/gnuplot
-	mkdir -p $(@D) && cp $< $@
-build/gnuplot.wasm: lib/build/gnuplot/src/gnuplot.wasm
-	mkdir -p $(@D) && cp $< $@
+	$(MAKE) $(submake_args) gnuplot
+	mkdir -p $(build)
+	mv $(<D)/src/gnuplot $(build)/gnuplot.js
+	mv $(<D)/src/gnuplot.wasm -t $(build)
 
 OBJS = $(patsubst src/%.cpp,src/%.o,$(wildcard src/*.cpp))
 
@@ -163,7 +162,7 @@ src/%.o: src/%.cpp $(LIBDIR)/libqalculate.a
 	$(EMSDK_ENV)
 	emcc --bind $(CXXFLAGS) -Oz -c $< -o $@
 
-build/qalc.js build/qalc.wasm &: $(OBJS) $(call libfiles,$(QALCWASM_LIBS))
+$(build)/qalc.js $(build)/qalc.wasm &: $(OBJS) $(call libfiles,$(QALCWASM_LIBS))
 	$(EMSDK_ENV)
 	mkdir -p $(@D)
 	emcc \
@@ -172,9 +171,9 @@ build/qalc.js build/qalc.wasm &: $(OBJS) $(call libfiles,$(QALCWASM_LIBS))
 	    -s WARN_UNALIGNED=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s FILESYSTEM=0 -s ASSERTIONS=0 \
 	    $(call prepend,-l,$(QALCWASM_LIBS)) \
 	    $(OBJS) \
-	    -o build/qalc.js
+	    -o $(build)/qalc.js
 
-PUBLIC_FILES = build/qalc.js build/qalc.wasm build/gnuplot.js build/gnuplot.wasm \
+PUBLIC_FILES = $(build)/qalc.js $(build)/qalc.wasm $(build)/gnuplot.js $(build)/gnuplot.wasm \
                src/index.html src/main.js src/gnuplot-worker.js src/style.css src/favicon.png
 
 serve: deploy
@@ -194,5 +193,5 @@ clean:
 .PHONY: clean-deps
 clean-deps:
 	rm -f $(call libfiles,$(ALL_LIBS))
-	$(foreach libdir,$(call prepend,lib/build/,$(ALL_LIBS)),[ -d $(libdir) ] && make -C $(libdir) clean
+	$(foreach libdir,$(call prepend,$(build)/,$(ALL_LIBS)),[ -d $(libdir) ] && $(MAKE) -C $(libdir) clean
 	)@true
