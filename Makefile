@@ -134,28 +134,29 @@ $(build)/gnuplot/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,GNUPLOT) | lib/gnupl
 
 submake_args = -C $(<D) CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
 
-$(LIBDIR)/libxml2.a: $(build)/libxml2/Makefile
+$(LIBDIR)/libxml2.a: $(build)/libxml2/Makefile | lib/libxml2
 	$(EMSDK_ENV)
 	$(MAKE) $(submake_args) install PROGRAMS=''
 
-$(LIBDIR)/libgmp.a: $(build)/gmp/Makefile
+$(LIBDIR)/libgmp.a: $(build)/gmp/Makefile | lib/gmp
 	$(EMSDK_ENV)
 	$(MAKE) $(submake_args) install
 
-$(LIBDIR)/libmpfr.a: $(build)/mpfr/Makefile
+$(LIBDIR)/libmpfr.a: $(build)/mpfr/Makefile | lib/mpfr
 	$(EMSDK_ENV)
 	$(MAKE) $(submake_args) install
 
-$(LIBDIR)/libqalculate.a: $(build)/libqalculate/Makefile
+$(LIBDIR)/libqalculate.a: $(build)/libqalculate/Makefile | lib/libqalculate
 	$(EMSDK_ENV)
 	$(MAKE) $(submake_args) install
 
-$(build)/gnuplot.js $(build)/gnuplot.wasm &: $(build)/gnuplot/Makefile
+GNUPLOT_BINS := $(build)/install/bin/gnuplot.js $(build)/install/bin/gnuplot.wasm
+$(GNUPLOT_BINS) &: $(build)/gnuplot/Makefile | lib/gnuplot
 	$(EMSDK_ENV)
 	$(MAKE) $(submake_args) gnuplot
 	mkdir -p $(build)
-	mv $(<D)/src/gnuplot $(build)/gnuplot.js
-	mv $(<D)/src/gnuplot.wasm -t $(build)
+	install -Dm 644 $(<D)/src/gnuplot $(@D)/gnuplot.js
+	install -D $(<D)/src/gnuplot.wasm $(@D)/gnuplot.wasm
 
 OBJS = $(patsubst src/%.cpp,src/%.o,$(wildcard src/*.cpp))
 
@@ -174,7 +175,7 @@ $(build)/qalc.js $(build)/qalc.wasm &: $(OBJS) $(call libfiles,$(QALCWASM_LIBS))
 	    $(OBJS) \
 	    -o $(build)/qalc.js
 
-PUBLIC_FILES = $(build)/qalc.js $(build)/qalc.wasm $(build)/gnuplot.js $(build)/gnuplot.wasm \
+PUBLIC_FILES = $(build)/qalc.js $(build)/qalc.wasm $(GNUPLOT_BINS) \
                src/index.html src/main.js src/gnuplot-worker.js src/style.css src/favicon.png
 
 serve: deploy
