@@ -111,6 +111,7 @@ $(build)/gmp/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,GMP) | lib/gmp
 $(build)/mpfr/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,MPFR) | lib/mpfr
 	$(EMSDK_ENV)
 	$(CD_BUILDDIR)
+	autoreconf -if -Wall $(ROOT_DIR)/lib/mpfr
 	emconfigure $(ROOT_DIR)/lib/mpfr/configure --host none --prefix="$(PREFIX)" \
 		--disable-thread-safe --enable-decimal-float=no \
 		--with-gmp=$(PREFIX)
