@@ -1,5 +1,6 @@
 const statusElement = document.getElementById('status');
 const cellTmpl = document.querySelector('#cell-template .cell');
+const plotErrTmpl = document.querySelector('#plot-template .plot-err');
 const cells = document.getElementById('cells');
 
 /** @typedef {node: HTMLElement, input: HTMLInputElement, result: HTMLElement} Cell */
@@ -14,21 +15,28 @@ const getCell = (cellNode) => ({
     result: cellNode.querySelector('.cell-result'),
 });
 
+let cellNum = 0;
+
 function newCell() {
     if (curCell) {
         curCell.input.readOnly = true;
     }
 
     curCell = getCell(cellTmpl.cloneNode(true));
+    cellNum += 1;
+    curCell.node.id = 'cell_' + cellNum;
     curCell.input.addEventListener('keydown', onKey);
     cells.append(curCell.node);
-    focusCell();
+    focusCell(curCell);
 }
 
+/** @param {Cell} cell */
 function focusCell(cell) {
-    const c = cell || curCell;
-    c.input.focus({ preventScroll: true });
-    c.node.scrollIntoView({ behavior: 'smooth' });
+    cell.input.focus({ preventScroll: true });
+    if (cell.input.readOnly) {
+        cell.input.select();
+    }
+    cell.node.scrollIntoView({ behavior: 'smooth' });
 }
 
 /** @param {KeyboardEvent} ev */
@@ -38,19 +46,30 @@ function onKey(ev) {
     if (ev.key === 'Enter') {
         const text = inp.value;
         if (inp === curCell.input) {
-            curCell.result.textContent = calc.calculateAndPrint(text, 1000);
+            if (text.trim() !== '') {
+                curCell.result.textContent = calc.calculateAndPrint(text, 1000);
+            }
             newCell();
         } else {
-            curCell.input.value = text;
-            focusCell();
+            if (text.trim() !== '') {
+                curCell.input.value = text;
+            }
+            focusCell(curCell);
         }
     } else if (ev.key === 'ArrowUp' || ev.key === 'ArrowDown') {
         const cellNode = inp.parentElement;
-        const adjacentCellNode =
+        const adjacent =
             ev.key === 'ArrowUp'
-                ? cellNode.previousElementSibling
-                : cellNode.nextElementSibling;
-        // it's null if e.g. we're at the top and go up
+                ? 'previousElementSibling'
+                : 'nextElementSibling';
+        let adjacentCellNode = cellNode;
+        do {
+            // this would be null if e.g. we're at the top and try to go up
+            adjacentCellNode = adjacentCellNode[adjacent];
+        } while (
+            adjacentCellNode != null &&
+            !adjacentCellNode.classList.contains('cell')
+        );
         if (adjacentCellNode) {
             focusCell(getCell(adjacentCellNode));
         }
@@ -58,32 +77,84 @@ function onKey(ev) {
     }
 }
 
+const emptySvg = `<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<svg
+ width="600" height="480"
+ viewBox="0 0 600 480"
+ xmlns="http://www.w3.org/2000/svg"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+/>`;
 
+let emptySvgUrl;
+let plot_id = 0;
+let gnuplotWorker;
+
+const makeSvgUrl = (data) =>
+    URL.createObjectURL(new Blob([data], { type: 'image/svg+xml' }));
+function runGnuplot(data_files, commands, extra_commandline, persist) {
+    if (!gnuplotWorker) {
+        gnuplotWorker = new Worker('gnuplot-worker.js');
+        gnuplotWorker.addEventListener('message', (ev) => {
+            const { id, output } = ev.data;
+            const plot = document.getElementById('plot_' + id);
+            if (output) {
+                plot.src = makeSvgUrl(output);
+                setTimeout(() => {
+                    focusCell(curCell);
+                }, 10);
+            } else {
+                plot.replaceWith(plotErrTmpl.cloneNode(true));
+            }
+        });
+    }
+    if (!emptySvgUrl) {
+        emptySvgUrl = makeSvgUrl(emptySvg);
+    }
+
+    const img = new Image();
+    img.classList.add('plot');
+    img.src = emptySvgUrl;
+    const id = plot_id++;
+    img.id = 'plot_' + id;
+    curCell.node.insertAdjacentElement('afterend', img);
+
+    gnuplotWorker.postMessage({
+        data_files,
+        commands,
+        extra_commandline,
+        persist,
+        id,
+    });
+    return true;
+}
 
 var Module = {
     postRun: () => {
-        console.time('new')
-        window.calc = new Module.Calculator()
+        console.time('new');
+        window.calc = new Module.Calculator();
         calc.loadGlobalDefinitions();
-        console.timeEnd('new')
-        console.time('calc x1000')
+        console.timeEnd('new');
+        console.time('calc x1000');
         for (let i = 0; i < 1000; i++) {
-            calc.calculateAndPrint('1+1', 1000)
+            calc.calculateAndPrint('1+1', 1000);
         }
-        console.timeEnd('calc x1000')
+        console.timeEnd('calc x1000');
 
         newCell();
     },
     print: function (text) {
-        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        if (arguments.length > 1)
+            text = Array.prototype.slice.call(arguments).join(' ');
         console.log(text);
     },
     printErr: function (text) {
-        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        if (arguments.length > 1)
+            text = Array.prototype.slice.call(arguments).join(' ');
         console.error(text);
     },
     setStatus: function (text) {
-        if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+        if (!Module.setStatus.last)
+            Module.setStatus.last = { time: Date.now(), text: '' };
         if (text === Module.setStatus.last.text) return;
         var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
         var now = Date.now();
@@ -98,8 +169,16 @@ var Module = {
     totalDependencies: 0,
     monitorRunDependencies: function (left) {
         this.totalDependencies = Math.max(this.totalDependencies, left);
-        Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
-    }
+        Module.setStatus(
+            left
+                ? 'Preparing... (' +
+                      (this.totalDependencies - left) +
+                      '/' +
+                      this.totalDependencies +
+                      ')'
+                : 'All downloads complete.'
+        );
+    },
 };
 Module.setStatus('Downloading...');
 window.onerror = function (event) {

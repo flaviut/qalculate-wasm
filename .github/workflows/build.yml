@@ -27,7 +27,7 @@ jobs:
           key: $${{ hashFiles('Makefile') }}
 
       - name: Build code
-        run: make deploy -j$(nproc)
+        run: make deploy -j$(nproc) RELEASE=1
 
       - name: Deploy to GitHub Pages
         if: success()

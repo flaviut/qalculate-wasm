@@ -28,3 +28,17 @@ body {
 .hide {
     display: none;
 }
+.plot {
+    display: block;
+}
+.plot-err {
+    color: red;
+    width: 600px;
+    height: 480px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.plot-err h2 {
+    text-align: center;
+}
