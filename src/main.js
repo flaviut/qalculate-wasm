@@ -134,11 +134,6 @@ var Module = {
         window.calc = new Module.Calculator();
         calc.loadGlobalDefinitions();
         console.timeEnd('new');
-        console.time('calc x1000');
-        for (let i = 0; i < 1000; i++) {
-            calc.calculateAndPrint('1+1', 1000);
-        }
-        console.timeEnd('calc x1000');
 
         newCell();
     },
