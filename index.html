@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-us" style="margin: 2em;">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <link rel='icon' type='image/png' href='favicon.png'>
+    <title>Qalculate Web</title>
+    <link rel="preload" href="qalc.js" as="script">
+    <link rel="preload" href="qalc.wasm" as="fetch">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body>
+    <h1>Qalculate!</h1>
+
+    <p>This page is designed to test running Qalculate in the browser using
+      WASM. At the moment, currencies are not supported, as they require
+      external resources.</p>
+
+    <p>Plotting works, try <code>plot(3x^2; -10; 10)</code></p>
+
+    <p>The source code for this tool <a
+        href="https://github.com/flaviut/qalculate-wasm">can be found on
+        GitHub</a></p>
+
+    <div id="status">Downloading...</div>
+
+    <div class="hide" id="cell-template">
+        <div class="cell">
+            <input type="text" class="cell-input" placeholder="2x + 5 = 9">
+            <div class="cell-result"></div>
+        </div>
+    </div>
+    <div class="hide" id="plot-template">
+        <div class="plot-err">
+            <h2>Unable to plot</h2>
+        </div>
+    </div>
+
+    <div id="cells">
+
+    </div>
+
+    <script type='text/javascript' src='main.js'></script>
+    <script async type="text/javascript" src="qalc.js"></script>
+    <script data-goatcounter="https://j88og8.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+
+</html>
