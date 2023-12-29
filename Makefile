@@ -4,10 +4,10 @@ SHELL := /bin/bash
 
 
 ifneq ($(RELEASE),)
-extra_flags := -flto -Oz -O3
+extra_flags := -g3 -flto -O3
 build := build/release
 else
-extra_flags := -g
+extra_flags := -g3 -Og
 build := build/debug
 endif
 
@@ -15,7 +15,7 @@ ROOT_DIR := $(PWD)
 PREFIX := $(ROOT_DIR)/$(build)/install
 CFLAGS := -I$(PREFIX)/include $(extra_flags)
 CXXFLAGS = $(CFLAGS) -fno-rtti -fno-exceptions -std=c++11 -DEMSCRIPTEN_HAS_UNBOUND_TYPE_NAMES=0
-LDFLAGS := -L$(PREFIX)/lib -fno-rtti $(extra_flags)
+LDFLAGS := -L$(PREFIX)/lib -fno-rtti $(extra_flags) -gsource-map -gseparate-dwarf
 
 prepend = $(foreach a,$(2),$(1)$(a))
 libfiles = $(foreach lib,$(1),$(LIBDIR)/lib$(lib).a)
@@ -28,22 +28,21 @@ libreqs = $(call libfiles,$($(1)_REQS))
 
 QALCWASM_LIBS := qalculate gmp mpfr xml2
 
-QALCULATE_VER := 4092c3c900728bb336b3f189dcab531fae33d7f2
-QALCULATE_CHKSUM := sha-256=e7724621acd3efddeeb23f0f91a40fb0d9f10de4e7b2e7efae6ae3b09c240c9c
+QALCULATE_VER := 4.9.0
+QALCULATE_CHKSUM := sha-256=6130ed28f7fb8688bccede4f3749b7f75e4a000b8080840794969d21d1c1bf0f
 QALCULATE_REQS := gmp mpfr xml2
-# QALCULATE_URL = https://github.com/Qalculate/libqalculate/releases/download/v$(1)/libqalculate-$(1).tar.gz
-QALCULATE_URL = https://github.com/Qalculate/libqalculate/archive/$(1).tar.gz
+QALCULATE_URL = https://github.com/Qalculate/libqalculate/releases/download/v$(1)/libqalculate-$(1).tar.gz
 
-EMSDK_VER := 2.0.21
-EMSDK_CHKSUM := sha-256=906c0169578c4ffb1afd300627b79fc1fcbab03731765a11b96153063b743654
+EMSDK_VER := 3.1.51
+EMSDK_CHKSUM := sha-256=6edeb200c28505db64a1a9f14373ecc3ba3151cebf3d8314895e603561bc61c2
 EMSDK_URL = https://github.com/emscripten-core/emsdk/archive/$(1).tar.gz
 
-GMP_VER := 6.2.1
-GMP_CHKSUM := sha-256=fd4829912cddd12f84181c3451cc752be224643e87fac497b69edddadc49b4f2
+GMP_VER := 6.3.0
+GMP_CHKSUM := sha-256=a3c2b80201b89e68616f4ad30bc66aee4927c3ce50e33929ca819d5c43538898
 GMP_URL = https://ftp.gnu.org/gnu/gmp/gmp-$(1).tar.xz \
 
-MPFR_VER := 4.1.0
-MPFR_CHKSUM := sha-256=0c98a3f1732ff6ca4ea690552079da9c597872d30e96ec28414ee23c95558a7f
+MPFR_VER := 4.2.1
+MPFR_CHKSUM := sha-256=277807353a6726978996945af13e52829e3abd7a9a5b7fb2793894e18f1fcbb2
 MPFR_REQS := gmp
 MPFR_URL = https://ftp.gnu.org/gnu/mpfr/mpfr-$(1).tar.xz
 
@@ -51,8 +50,8 @@ XML2_VER := 2.9.12
 XML2_CHKSUM := sha-256=c8d6681e38c56f172892c85ddc0852e1fd4b53b4209e7f4ebf17f7e2eae71d92
 XML2_URL = http://xmlsoft.org/sources/libxml2-$(1).tar.gz
 
-GNUPLOT_VER := 5.4.1
-GNUPLOT_CHKSUM := sha-256=6b690485567eaeb938c26936e5e0681cf70c856d273cc2c45fabf64d8bc6590e
+GNUPLOT_VER := 5.4.10
+GNUPLOT_CHKSUM := sha-256=975d8c1cc2c41c7cedc4e323aff035d977feb9a97f0296dd2a8a66d197a5b27c
 GNUPLOT_URL = https://downloads.sourceforge.net/project/gnuplot/gnuplot/$(1)/gnuplot-$(1).tar.gz
 
 .PHONY: serve default
@@ -130,7 +129,7 @@ $(build)/gnuplot/Makefile: $(ACTIVATE_EMSDK) $(call libreqs,GNUPLOT) | lib/gnupl
 	$(CD_BUILDDIR)
 	emconfigure $(ROOT_DIR)/lib/gnuplot/configure \
 		--host none --prefix="$(PREFIX)" \
-		--without-readline --without-x --disable-h3d-quadtree --disable-wxwidgets
+		--without-readline --without-x --disable-wxwidgets --without-qt
 
 submake_args = -C $(<D) CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)"
 
